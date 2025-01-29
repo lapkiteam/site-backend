@@ -46,13 +46,30 @@ func main() {
 	router.LoadHTMLFiles("auth/index.html")
 
 	router.GET("/auth", func(ctx *gin.Context) {
+		cookie, err := ctx.Cookie(sessionCookieName)
+		if err != nil {
+			ctx.HTML(http.StatusOK, "index.html", gin.H{})
+			return
+		}
+
+		for _, token := range tokens {
+			if cookie == token {
+				ctx.Redirect(http.StatusSeeOther, "/")
+				return
+			}
+		}
+
 		ctx.HTML(http.StatusOK, "index.html", gin.H{})
+		return
+
 	})
 	router.POST("/auth", postAuthEndpoint)
 
 	authorized := router.Group("/", Auth())
 	{
-		authorized.GET("/example", func(ctx *gin.Context) {})
+		authorized.GET("/", func(ctx *gin.Context) {
+			ctx.JSON(http.StatusOK, gin.H{"Message": "Welcome"})
+		})
 	}
 
 	router.Run(":8080")
@@ -88,6 +105,8 @@ func postAuthEndpoint(ctx *gin.Context) {
 			token := base64.StdEncoding.EncodeToString([]byte(login + ":" + password))
 			tokens = append(tokens, token)
 			ctx.SetCookie(sessionCookieName, token, 60*60, "/", "localhost", false, true)
+			ctx.Request.Method = "GET"
+			ctx.Redirect(http.StatusSeeOther, "/")
 			return
 		}
 	}
