@@ -1,4 +1,4 @@
-module github.com/funnysockorg/docs-viewer
+module github.com/lapkiteam/docs-viewer
 
 go 1.23.5
 
