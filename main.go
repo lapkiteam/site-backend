@@ -12,8 +12,11 @@ import (
 )
 
 var (
-	tokens            []string
-	sessionCookieName = "sessionId"
+	tokens               []string
+	sessionCookieName    = "sessionId"
+	previewUrlCookieName = "previewUrl"
+	serverName = https://www.lapkiteam.fun
+	//serverName = "localhost"
 )
 
 func Auth() gin.HandlerFunc {
@@ -44,6 +47,7 @@ func main() {
 	router.Use()
 
 	router.LoadHTMLFiles("auth/index.html")
+	router.Static("/css", "auth/css")
 
 	router.GET("/auth", func(ctx *gin.Context) {
 		cookie, err := ctx.Cookie(sessionCookieName)
@@ -64,6 +68,11 @@ func main() {
 
 	})
 	router.POST("/auth", postAuthEndpoint)
+	router.GET("/", func(ctx *gin.Context) {
+		ctx.Request.Method = "GET"
+		ctx.Redirect(http.StatusSeeOther, "/auth")
+		return
+	})
 
 	authorized := router.Group("/", Auth())
 	{
@@ -102,7 +111,7 @@ func postAuthEndpoint(ctx *gin.Context) {
 		if (login == envLogin) && (password == envPassword) {
 			token := base64.StdEncoding.EncodeToString([]byte(login + ":" + password))
 			tokens = append(tokens, token)
-			ctx.SetCookie(sessionCookieName, token, 60*60, "/", "localhost", false, true)
+			ctx.SetCookie(sessionCookieName, token, 60*60, "/", serverName, false, true)
 			ctx.Request.Method = "GET"
 			ctx.Redirect(http.StatusSeeOther, "/MissingBoar.Docs/")
 			return

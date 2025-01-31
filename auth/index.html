@@ -1,13 +1,21 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Auth</title>
-    </head>
-    <body>
-        <form method="post" action="/auth">
-            <input type="text" name="login" id="login" />
-            <input type="password" name="password" id="password" />
-            <input type="submit" value="Submit"/>
-        </form>
-    </body>
+<html >
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome</title>
+      <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <h1>Sign In Form</h1>
+<div id="wrapper">
+	<form id="sign-in" method="POST" action="/auth" autocomplete="off">
+		<input type="text" id="login" name="login" placeholder="username" />
+		<input type="password" id="password" name="password" placeholder="password" />
+		<button type="submit">&#xf0da;</button>
+	</form>
+</div>
+  
+  
+</body>
 </html>
