@@ -15,7 +15,7 @@ var (
 	tokens               []string
 	sessionCookieName    = "sessionId"
 	previewUrlCookieName = "previewUrl"
-	serverName = https://www.lapkiteam.fun
+	serverName           = "https://www.lapkiteam.fun"
 	//serverName = "localhost"
 )
 
