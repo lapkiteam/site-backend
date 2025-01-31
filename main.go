@@ -54,7 +54,7 @@ func main() {
 
 		for _, token := range tokens {
 			if cookie == token {
-				ctx.Redirect(http.StatusSeeOther, "/")
+				ctx.Redirect(http.StatusSeeOther, "/MissingBoar.Docs/")
 				return
 			}
 		}
@@ -67,9 +67,7 @@ func main() {
 
 	authorized := router.Group("/", Auth())
 	{
-		authorized.GET("/", func(ctx *gin.Context) {
-			ctx.JSON(http.StatusOK, gin.H{"Message": "Welcome"})
-		})
+		authorized.StaticFS("/MissingBoar.Docs/", gin.Dir("site", false))
 	}
 
 	router.Run(":8080")
@@ -106,7 +104,7 @@ func postAuthEndpoint(ctx *gin.Context) {
 			tokens = append(tokens, token)
 			ctx.SetCookie(sessionCookieName, token, 60*60, "/", "localhost", false, true)
 			ctx.Request.Method = "GET"
-			ctx.Redirect(http.StatusSeeOther, "/")
+			ctx.Redirect(http.StatusSeeOther, "/MissingBoar.Docs/")
 			return
 		}
 	}
