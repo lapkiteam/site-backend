@@ -11,6 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const cookieLifeTime = 60 * 60 * 24 * 30
+
 var (
 	tokens               []string
 	sessionCookieName    = "sessionId"
@@ -23,6 +25,7 @@ func Auth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		cookie, err := ctx.Cookie(sessionCookieName)
 		if err != nil {
+			ctx.SetCookie(previewUrlCookieName, ctx.Request.URL.Path, cookieLifeTime, "/", serverName, false, true)
 			ctx.Request.Method = "GET"
 			ctx.Redirect(http.StatusSeeOther, "/auth")
 			return
@@ -35,6 +38,7 @@ func Auth() gin.HandlerFunc {
 			}
 		}
 
+		ctx.SetCookie(previewUrlCookieName, ctx.Request.URL.Path, cookieLifeTime, "/", serverName, false, true)
 		ctx.Request.Method = "GET"
 		ctx.Redirect(http.StatusSeeOther, "/auth")
 		ctx.Next()
@@ -111,9 +115,15 @@ func postAuthEndpoint(ctx *gin.Context) {
 		if (login == envLogin) && (password == envPassword) {
 			token := base64.StdEncoding.EncodeToString([]byte(login + ":" + password))
 			tokens = append(tokens, token)
-			ctx.SetCookie(sessionCookieName, token, 60*60, "/", serverName, false, true)
+			ctx.SetCookie(sessionCookieName, token, cookieLifeTime, "/", serverName, false, true)
 			ctx.Request.Method = "GET"
-			ctx.Redirect(http.StatusSeeOther, "/MissingBoar.Docs/")
+
+			redirectPath, err := ctx.Cookie(previewUrlCookieName)
+			if err != nil {
+				ctx.Redirect(http.StatusSeeOther, "/MissingBoar.Docs/")
+			}
+
+			ctx.Redirect(http.StatusSeeOther, redirectPath)
 			return
 		}
 	}
