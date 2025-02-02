@@ -1,50 +1,17 @@
 package main
 
 import (
-	"bufio"
 	"encoding/base64"
-	"fmt"
+	authconfig "github.com/lapkiteam/docs-viewer/pkg/config/auth"
+	"github.com/lapkiteam/docs-viewer/pkg/cookie/previewurl"
+	"github.com/lapkiteam/docs-viewer/pkg/cookie/session"
+	"github.com/lapkiteam/docs-viewer/pkg/middleware/auth"
 	"net/http"
-	"os"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-const cookieLifeTime = 60 * 60 * 24 * 30
-
-var (
-	tokens               []string
-	sessionCookieName    = "sessionId"
-	previewUrlCookieName = "previewUrl"
-	serverName           = "https://www.lapkiteam.fun"
-	//serverName = "localhost"
-)
-
-func Auth() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		cookie, err := ctx.Cookie(sessionCookieName)
-		if err != nil {
-			ctx.SetCookie(previewUrlCookieName, ctx.Request.URL.Path, 60*60, "/", serverName, false, true)
-			ctx.Request.Method = "GET"
-			ctx.Redirect(http.StatusSeeOther, "/auth")
-			return
-		}
-
-		for _, token := range tokens {
-			if cookie == token {
-				ctx.Next()
-				return
-			}
-		}
-
-		ctx.SetCookie(previewUrlCookieName, ctx.Request.URL.Path, 60*60, "/", serverName, false, true)
-		ctx.Request.Method = "GET"
-		ctx.Redirect(http.StatusSeeOther, "/auth")
-		ctx.Next()
-		return
-	}
-}
+var tokens []string
 
 func main() {
 	router := gin.Default()
@@ -54,7 +21,7 @@ func main() {
 	router.Static("/css", "auth/css")
 
 	router.GET("/auth", func(ctx *gin.Context) {
-		cookie, err := ctx.Cookie(sessionCookieName)
+		cookie, err := ctx.Cookie(session.CookieName)
 		if err != nil {
 			ctx.HTML(http.StatusOK, "index.html", gin.H{})
 			return
@@ -72,13 +39,14 @@ func main() {
 
 	})
 	router.POST("/auth", postAuthEndpoint)
+
 	router.GET("/", func(ctx *gin.Context) {
 		ctx.Request.Method = "GET"
-		ctx.Redirect(http.StatusSeeOther, "/auth")
+		ctx.Redirect(http.StatusSeeOther, "/MissingBoar.Docs/")
 		return
 	})
 
-	authorized := router.Group("/", Auth())
+	authorized := router.Group("/", auth.Auth(&tokens))
 	{
 		authorized.StaticFS("/MissingBoar.Docs/", gin.Dir("site", false))
 	}
@@ -86,46 +54,25 @@ func main() {
 	router.Run(":8080")
 }
 
-func getAuthDataFromEnv() map[string]string {
-	envData := map[string]string{}
-
-	file, err := os.Open(".env")
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		readData := strings.Split(scanner.Text(), "=")
-
-		envData[readData[0]] = readData[1]
-	}
-
-	return envData
-}
-
 func postAuthEndpoint(ctx *gin.Context) {
 	login := ctx.PostForm("login")
 	password := ctx.PostForm("password")
 
-	dataFromEnv := getAuthDataFromEnv()
+	userExists := authconfig.CheckLogin(login, password)
 
-	for envLogin, envPassword := range dataFromEnv {
-		if (login == envLogin) && (password == envPassword) {
-			token := base64.StdEncoding.EncodeToString([]byte(login + ":" + password))
-			tokens = append(tokens, token)
-			ctx.SetCookie(sessionCookieName, token, cookieLifeTime, "/", serverName, false, true)
-			ctx.Request.Method = "GET"
+	if userExists {
+		token := base64.StdEncoding.EncodeToString([]byte(login + ":" + password))
+		tokens = append(tokens, token)
+		session.SetCookie(ctx, token, "/")
 
-			redirectPath, err := ctx.Cookie(previewUrlCookieName)
-			if err != nil {
-				ctx.Redirect(http.StatusSeeOther, "/MissingBoar.Docs/")
-			}
-
-			ctx.Redirect(http.StatusSeeOther, redirectPath)
-			return
+		ctx.Request.Method = "GET"
+		redirectPath, err := ctx.Cookie(previewurl.CookieName)
+		if err != nil {
+			ctx.Redirect(http.StatusSeeOther, "/MissingBoar.Docs/")
 		}
+
+		ctx.Redirect(http.StatusSeeOther, redirectPath)
+		return
 	}
 
 	ctx.Request.Method = "GET"
