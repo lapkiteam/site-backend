@@ -25,7 +25,7 @@ func Auth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		cookie, err := ctx.Cookie(sessionCookieName)
 		if err != nil {
-			ctx.SetCookie(previewUrlCookieName, ctx.Request.URL.Path, cookieLifeTime, "/", serverName, false, true)
+			ctx.SetCookie(previewUrlCookieName, ctx.Request.URL.Path, 60*60, "/", serverName, false, true)
 			ctx.Request.Method = "GET"
 			ctx.Redirect(http.StatusSeeOther, "/auth")
 			return
@@ -38,7 +38,7 @@ func Auth() gin.HandlerFunc {
 			}
 		}
 
-		ctx.SetCookie(previewUrlCookieName, ctx.Request.URL.Path, cookieLifeTime, "/", serverName, false, true)
+		ctx.SetCookie(previewUrlCookieName, ctx.Request.URL.Path, 60*60, "/", serverName, false, true)
 		ctx.Request.Method = "GET"
 		ctx.Redirect(http.StatusSeeOther, "/auth")
 		ctx.Next()
