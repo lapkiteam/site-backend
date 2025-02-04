@@ -48,7 +48,7 @@ func main() {
 
 	authorized := router.Group("/", auth.Auth(&tokens))
 	{
-		authorized.StaticFS("/MissingBoar.Docs/", gin.Dir("site", false))
+		authorized.StaticFS("/MissingBoar.Docs/", gin.Dir("site/docs/MissingBoar", false))
 	}
 
 	router.Run(":8080")
