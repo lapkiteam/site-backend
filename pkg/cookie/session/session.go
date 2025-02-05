@@ -3,7 +3,7 @@ package session
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/lapkiteam/docs-viewer/pkg/config/env"
+	"github.com/lapkiteam/site-backend/pkg/config"
 )
 
 const (
@@ -16,7 +16,7 @@ func SetCookie(ctx *gin.Context, value string, path string) {
 		path = "/"
 	}
 
-	appUrl, err := env.GetAppUrl()
+	appUrl, err := config.GetAppUrl()
 	if err != nil {
 		fmt.Println(err)
 	}
