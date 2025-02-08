@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lapkiteam/site-backend/app/auth"
 	"github.com/lapkiteam/site-backend/app/user"
+	"github.com/lapkiteam/site-backend/pkg/config"
 	"github.com/lapkiteam/site-backend/pkg/database"
 	"gorm.io/gorm"
 	"log"
@@ -46,6 +47,14 @@ func main() {
 	}
 
 	router.POST("/MissingBoar.Docs/", func(ctx *gin.Context) {
+		accessToken := ctx.Request.Header.Get("Access-Token")
+		configUploadToken, _ := config.GetUploadToken()
+
+		if accessToken != configUploadToken {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+			return
+		}
+
 		//Recieve File
 		file, _ := ctx.FormFile("file")
 
@@ -87,6 +96,14 @@ func main() {
 	})
 
 	router.POST("/MissingBoar/", func(ctx *gin.Context) {
+		accessToken := ctx.Request.Header.Get("Access-Token")
+		configUploadToken, _ := config.GetUploadToken()
+
+		if accessToken != configUploadToken {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+			return
+		}
+
 		file, _ := ctx.FormFile("file")
 
 		ctx.SaveUploadedFile(file, file.Filename)

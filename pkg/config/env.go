@@ -35,3 +35,12 @@ func GetAppUrl() (string, error) {
 
 	return appUrl, nil
 }
+
+func GetUploadToken() (string, error) {
+	uploadToken, err := getValue("UPLOAD_TOKEN")
+	if err != nil {
+		return "", err
+	}
+
+	return uploadToken, nil
+}
